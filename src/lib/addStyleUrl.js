@@ -24,10 +24,7 @@ module.exports = function addStyleUrl(cssUrl) {
       };
     }
   } else {
-    if(!global.__universal) {
-      throw new Error('addStyleUrl when run server side requires a global.__universal object defined to append to.')
-    }
-    global.__universal.links = global._universal.links || []
-    global.__universal.links.push(cssUrl)
+    global.__universal = global.__universal || require('./universal')
+    global.__universal.styleUrls.push(cssUrl)
   }
 }

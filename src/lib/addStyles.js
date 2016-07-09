@@ -63,11 +63,8 @@ module.exports = function addStyles(list, options) {
       }
     };
   } else {
-    if(!global.__universal) {
-      throw new Error('addStyleUrl when run server side requires a global.__universal object defined to append to.')
-    }
-    global.__universal.styles = global.__universal.styles || []
-    global.__universal.styles.push([listToStyles(list), options])
+    global.__universal = global.__universal || require('./universal')
+    global.__universal.styles.push([list, options])
   }
 }
 

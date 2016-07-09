@@ -8,24 +8,49 @@
 
 `npm i -S universal-style-loader`
 
-By default, this module will accrue styles and link css urls when server rendering into a global.__universal__ object. If you do nothing, the universal-style-loader should never throw, but the styles will not be applied to anything (from the server render). There are a couple of options depending on your needs to get the styles on the page, server-side.
+By default, this module will accrue styles and link css urls when server rendering into a global.__universal__ object. If you do nothing, the universal-style-loader should never throw, but the styles will not be applied to anything (from the server render). There are a few options depending on your needs to get the styles on the page, server-side.
 
 
 #### 1. replay function
 
 * Executes the same script that would have been run by the style-loader, at a deferred point in time (hopefully, in a browser context).
-* Will try and access window and other DOM globals. If they do not exist, it will repeat the same server fallback over.
+* Will try and access window and other DOM globals. If they do not exist, it will repeat the same server fallback over again.
 
 ```js
 global.__universal__.replay()
 ```
 
-#### 2. reactStyles function (recommended)
+#### 2. serialize function
+
+* Prints out a raw string that can be embedded in a web page head template (if you are not server rendering with React).
+* Will embed all the style loading code with the styles and will run as soon as it is hit in the web page load.
+* Does not interact with window, document or other DOM globals. (EVENTUALLY)
+
+```
+/** RENDER SOME STUFF THAT WOULD NORMALLY THROW WITH style-loader */
+/** ... */
+
+/** Prints out raw string styles to template into head and clears the buffer out for the next server render */
+const styles = global.__universal__.serialize()
+
+const html = `<!doctype html>
+<html>
+  <head>
+    ${styles}
+  </head>
+  <body>
+    ${content}
+  </body>
+</html>
+```
+
+
+#### 3. reactStyles function (recommended for react apps)
 
 * Recommended for server-side rendering in React applications.
 * Prints out a <Styles /> React component that can be rendered into the head tag (full react-router example below).
 * Does not interact with window, document or other DOM globals. (EVENTUALLY)
-* By using a factory, this library needs no React dependency.
+* By using a factory, this library needs no npm React dependency.
 
 ```jsx
 import React from 'react'
@@ -43,10 +68,9 @@ router.use((req, res, next) => {
 
   /* react router match history */
   match({ history, routes, location: req.url }, (error, redirectLocation, renderProps) => {
-
     const content = renderToString(<Provider store={store}><RouterContext {...renderProps} /></Provider>)
 
-    /** Prints out a component that will apply styles to the server render and clears the buffer out for the next server render */
+    /** Returns a component that applies styles and clears the buffer for the next server render */
     const Styles = global.__universal__.reactStyles(React)
 
     const html = `<!doctype html>
@@ -67,27 +91,6 @@ router.use((req, res, next) => {
 })
 ```
 
-#### 3. serialize function
-
-* Similar to reactStyles above but prints out a raw string that can be embedded in a web page head template (if you are not server rendering with React).
-* Does not interact with window, document or other DOM globals. (EVENTUALLY)
-
-```
-//** RENDER SOME STUFF */
-
-/** Prints out raw string styles to template into head and clears the buffer out for the next server render */
-const styles = global.__universal__.serialize()
-
-const html = `<!doctype html>
-<html>
-  <head>
-    ${styles}
-  </head>
-  <body>
-    ${content}
-  </body>
-</html>
-```
 
 
 

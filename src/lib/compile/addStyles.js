@@ -5,7 +5,7 @@
  */
 
  import memoize from '../utils/memoize'
- import universal from './universal'
+ import universalStyles from 'universal-styles'
 
 const isOldIE = memoize(() => /msie [6-9]\b/.test(window.navigator.userAgent.toLowerCase()))
 const getHeadElement = memoize(() => document.head || document.getElementsByTagName('head')[0])
@@ -49,7 +49,7 @@ export default function addStyles (list, options) {
       }
     }
   } else {
-    const enqueue = universal(addStyles)
+    const enqueue = universalStyles(addStyles)
     enqueue(list, options)
   }
 }

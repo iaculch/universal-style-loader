@@ -4,7 +4,7 @@
  * Refactored by Cole Chamberlain <cole.chamberlain@gmail.com> @noderaider (ES2016 / universal-style-loader)
  */
 
- import universal from './universal'
+ import universalStyles from 'universal-styles'
 
 export default function addStyleUrls(cssUrl) {
   if(typeof window === 'object') {
@@ -24,7 +24,7 @@ export default function addStyleUrls(cssUrl) {
       }
     }
   } else {
-    const enqueue = universal(addStyleUrls)
+    const enqueue = universalStyles(addStyleUrls)
     enqueue(cssURL)
   }
 }

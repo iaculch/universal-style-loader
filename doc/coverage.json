@@ -1,0 +1,31 @@
+{
+  "coverage": "50%",
+  "expectCount": 4,
+  "actualCount": 2,
+  "files": {
+    "lib/compile/addStyleUrls.js": {
+      "expectCount": 1,
+      "actualCount": 0,
+      "undocumentLines": [
+        9
+      ]
+    },
+    "lib/compile/addStyles.js": {
+      "expectCount": 1,
+      "actualCount": 0,
+      "undocumentLines": [
+        17
+      ]
+    },
+    "lib/utils/memoize.js": {
+      "expectCount": 1,
+      "actualCount": 1,
+      "undocumentLines": []
+    },
+    "lib/utils/wrapper.js": {
+      "expectCount": 1,
+      "actualCount": 1,
+      "undocumentLines": []
+    }
+  }
+}

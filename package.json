@@ -1,6 +1,6 @@
 {
   "name": "universal-style-loader",
-  "version": "0.13.9",
+  "version": "0.13.10",
   "description": "universal style loader module for webpack",
   "main": "lib/index.js",
   "files": [

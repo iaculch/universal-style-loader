@@ -5,12 +5,6 @@
 */
 
 
-if(typeof window === 'undefined') {
-  var jsdom = require('jsdom').jsdom;
-  global.document = jsdom('<!DOCTYPE html><html><head></head><body></body></html>');
-  global.window = document.defaultView;
-  global.navigator = window.navigator;
-}
 
 var stylesInDom = {},
   memoize = function(fn) {

@@ -4,12 +4,6 @@
 */
 
 
-if(typeof window === 'undefined') {
-  var jsdom = require('jsdom').jsdom;
-  global.document = jsdom('<!DOCTYPE html><html><head></head><body></body></html>');
-  global.window = document.defaultView;
-  global.navigator = window.navigator;
-}
 
 module.exports = function addStyleUrl(cssUrl) {
   if(typeof DEBUG !== "undefined" && DEBUG) {

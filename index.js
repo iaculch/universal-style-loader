@@ -15,7 +15,7 @@ module.exports.pitch = function(remainingRequest) {
     "  var jsdom = require('jsdom').jsdom;",
     "  var document = jsdom('<html><head></head><body></body></html>');",
     "  window = document.defaultView;",
-    "  document = window.document",
+    "  document = window.document;",
     "}",
     "",
     "// load the styles",

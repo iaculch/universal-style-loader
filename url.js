@@ -9,13 +9,6 @@ module.exports.pitch = function(remainingRequest) {
   this.cacheable && this.cacheable();
   return [
     "// style-loader: Adds some reference to a css file to the DOM by adding a <link> tag",
-    "if(typeof window === 'undefined') {",
-    "\tvar jsdom = require('jsdom').jsdom;",
-    "\tglobal.document = jsdom('<!DOCTYPE html><html><head></head><body></body></html>');",
-    "\tglobal.window = document.defaultView;",
-    "\tglobal.navigator = window.navigator;",
-    "}",
-    "",
     "var update = require(" + JSON.stringify("!" + path.join(__dirname, "addStyleUrl.js")) + ")(",
     "\trequire(" + loaderUtils.stringifyRequest(this, "!!" + remainingRequest) + ")",
     ");",

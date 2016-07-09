@@ -24,43 +24,51 @@ var stylesInDom = {},
   singletonCounter = 0,
   styleElementsInsertedAtTop = [];
 
-module.exports = function(list, options) {
-  if(typeof DEBUG !== "undefined" && DEBUG) {
-    if(typeof document !== "object") throw new Error("The style-loader cannot be used in a non-browser environment");
-  }
-
-  options = options || {};
-  // Force single-tag solution on IE6-9, which has a hard limit on the # of <style>
-  // tags it will allow on a page
-  if (typeof options.singleton === "undefined") options.singleton = isOldIE();
-
-  // By default, add <style> tags to the bottom of <head>.
-  if (typeof options.insertAt === "undefined") options.insertAt = "bottom";
-
-  var styles = listToStyles(list);
-  addStylesToDom(styles, options);
-
-  return function update(newList) {
-    var mayRemove = [];
-    for(var i = 0; i < styles.length; i++) {
-      var item = styles[i];
-      var domStyle = stylesInDom[item.id];
-      domStyle.refs--;
-      mayRemove.push(domStyle);
+module.exports = function addStyles(list, options) {
+  if(typeof window === 'object') {
+    if(typeof DEBUG !== "undefined" && DEBUG) {
+      if(typeof document !== "object") throw new Error("The style-loader cannot be used in a non-browser environment");
     }
-    if(newList) {
-      var newStyles = listToStyles(newList);
-      addStylesToDom(newStyles, options);
-    }
-    for(var i = 0; i < mayRemove.length; i++) {
-      var domStyle = mayRemove[i];
-      if(domStyle.refs === 0) {
-        for(var j = 0; j < domStyle.parts.length; j++)
-          domStyle.parts[j]();
-        delete stylesInDom[domStyle.id];
+
+    options = options || {};
+    // Force single-tag solution on IE6-9, which has a hard limit on the # of <style>
+    // tags it will allow on a page
+    if (typeof options.singleton === "undefined") options.singleton = isOldIE();
+
+    // By default, add <style> tags to the bottom of <head>.
+    if (typeof options.insertAt === "undefined") options.insertAt = "bottom";
+
+    var styles = listToStyles(list);
+    addStylesToDom(styles, options);
+
+    return function update(newList) {
+      var mayRemove = [];
+      for(var i = 0; i < styles.length; i++) {
+        var item = styles[i];
+        var domStyle = stylesInDom[item.id];
+        domStyle.refs--;
+        mayRemove.push(domStyle);
       }
+      if(newList) {
+        var newStyles = listToStyles(newList);
+        addStylesToDom(newStyles, options);
+      }
+      for(var i = 0; i < mayRemove.length; i++) {
+        var domStyle = mayRemove[i];
+        if(domStyle.refs === 0) {
+          for(var j = 0; j < domStyle.parts.length; j++)
+            domStyle.parts[j]();
+          delete stylesInDom[domStyle.id];
+        }
+      }
+    };
+  } else {
+    if(!global.__universal) {
+      throw new Error('addStyleUrl when run server side requires a global.__universal object defined to append to.')
     }
-  };
+    global.__universal.styles = global.__universal.styles || []
+    global.__universal.styles.push([listToStyles(list), options])
+  }
 }
 
 function addStylesToDom(styles, options) {

@@ -11,13 +11,6 @@ module.exports.pitch = function(remainingRequest) {
 
   return [
     "// universal-style-loader: Adds some css to the DOM by adding a <style> tag",
-    "",
-    "if(typeof window === 'undefined') {",
-    "\tvar jsdom = require('jsdom').jsdom;",
-    "\tglobal.document = jsdom('<!DOCTYPE html><html><head></head><body></body></html>');",
-    "\tglobal.window = document.defaultView;",
-    "\tglobal.navigator = window.navigator;",
-    "}",
     "// load the styles",
     "var content = require(" + loaderUtils.stringifyRequest(this, "!!" + remainingRequest) + ");",
     "if(typeof content === 'string') content = [[module.id, content, '']];",

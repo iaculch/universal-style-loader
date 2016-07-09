@@ -9,12 +9,6 @@ module.exports.pitch = function(remainingRequest) {
   if(this.cacheable) this.cacheable();
   var query = loaderUtils.parseQuery(this.query);
   return [
-    "if(typeof window === 'undefined') {",
-    "\tvar jsdom = require('jsdom').jsdom;",
-    "\tglobal.document = jsdom('<!DOCTYPE html><html><head></head><body></body></html>');",
-    "\tglobal.window = document.defaultView;",
-    "\tglobal.navigator = window.navigator;",
-    "}",
     "var refs = 0;",
     "var dispose;",
     "var content = require(" + loaderUtils.stringifyRequest(this, "!!" + remainingRequest) + ");",

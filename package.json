@@ -1,8 +1,10 @@
 {
   "name": "universal-style-loader",
-  "version": "0.13.1",
+  "version": "0.13.2",
   "author": "Tobias Koppers @sokra",
-  "contributors": [ "Cole Chamberlain <cole.chamberlain@gmail.com>" ],
+  "contributors": [
+    "Cole Chamberlain <cole.chamberlain@gmail.com>"
+  ],
   "description": "universal style loader module for webpack",
   "devDependencies": {
     "css-loader": "~0.8.0"

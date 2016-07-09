@@ -9,13 +9,6 @@ module.exports.pitch = function(remainingRequest) {
   if(this.cacheable) this.cacheable();
   var query = loaderUtils.parseQuery(this.query);
 
-  if(typeof window === 'undefined') {
-    var jsdom = require('jsdom').jsdom;
-    global.document = jsdom('<!DOCTYPE html><html><head></head><body></body></html>');
-    global.window = document.defaultView;
-    global.navigator = window.navigator;
-  }
-
   return [
     "// universal-style-loader: Adds some css to the DOM by adding a <style> tag",
     "",

@@ -14,7 +14,8 @@ module.exports.pitch = function pitchUseable (remainingRequest) {
   if(this.cacheable) this.cacheable()
   var query = parseQuery(this.query)
 
-  const addStylesPath = path.join(__dirname, compile, 'addStyles.js')
+  const addStylesPath = path.join(__dirname, 'compile', 'addStyles.js')
+  const addStyles = `require(${stringifyRequest(this, `!${addStylesPath}`)}).default`
 
   return wrap(`
 var refs = 0;
@@ -24,7 +25,7 @@ if(typeof content === 'string') content = [[module.id, content, '']];
 exports.use = exports.ref = function() {
  if(!(refs++)) {
    exports.locals = content.locals;
-   dispose = require(${stringifyRequest(this, `!${addStylesPath}`)})(content, ${JSON.stringify(query)});
+   dispose = ${addStyles}(content, ${JSON.stringify(query)});
  }
  return exports;
 };

@@ -14,12 +14,11 @@ module.exports.pitch = function pitchUrl (remainingRequest) {
   this.cacheable && this.cacheable()
 
   const addStyleUrlsPath = path.join(__dirname, 'compile', 'addStyleUrls.js')
+  const addStyleUrls = `require(${JSON.stringify(`!${addStyleUrlsPath}`)}).default`
 
   return wrap(`
 /** Adds a <link> tag to the DOM with a reference to a css file. */
-var update = require(${JSON.stringify(`!${addStyleUrlsPath}`)})(
-  require(${stringifyRequest(this, `!!${remainingRequest}`)})
-);
+var update = ${addStyleUrls}( require(${stringifyRequest(this, `!!${remainingRequest}`)}) );
 
 /** Hot Module Replacement */
 if(module.hot) {

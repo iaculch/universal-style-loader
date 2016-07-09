@@ -15,6 +15,7 @@ module.exports.pitch = function pitch (remainingRequest) {
   var query = parseQuery(this.query)
 
   const addStylesPath = path.join(__dirname, 'compile', 'addStyles.js')
+  const addStyles = `require(${stringifyRequest(this, `!${addStylesPath}`)}).default`
 
   return wrap(`
 /** Adds some css to the DOM by adding a <style> tag */
@@ -25,7 +26,7 @@ if(typeof content === 'string')
   content = [[module.id, content, '']];
 
 /** add the styles to the DOM */
-var update = require(${stringifyRequest(this, `!${addStylesPath}`)})(content, ${JSON.stringify(query)});
+var update = ${addStyles}(content, ${JSON.stringify(query)});
 if(content.locals) module.exports = content.locals;
 
 /** Hot Module Replacement */

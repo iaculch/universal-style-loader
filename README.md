@@ -24,7 +24,7 @@ global.__universal__.replay()
 
 * Recommended for server-side rendering in React applications.
 * Prints out a <Styles /> React component that can be rendered into the head tag (full react-router example below).
-* Does not interact with window, document or other DOM globals.
+* Does not interact with window, document or other DOM globals. (EVENTUALLY)
 * By using a factory, this library needs no React dependency.
 
 ```jsx
@@ -67,16 +67,16 @@ router.use((req, res, next) => {
 })
 ```
 
-#### 3. stringStyles function
+#### 3. serialize function
 
 * Similar to reactStyles above but prints out a raw string that can be embedded in a web page head template (if you are not server rendering with React).
-* Does not interact with window, document or other DOM globals.
+* Does not interact with window, document or other DOM globals. (EVENTUALLY)
 
 ```
 //** RENDER SOME STUFF */
 
 /** Prints out raw string styles to template into head and clears the buffer out for the next server render */
-const styles = global.__universal__.stringStyles()
+const styles = global.__universal__.serialize()
 
 const html = `<!doctype html>
 <html>

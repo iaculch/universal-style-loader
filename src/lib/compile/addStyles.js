@@ -4,31 +4,18 @@
  * Refactored by Cole Chamberlain <cole.chamberlain@gmail.com> @noderaider (ES2016 / universal-style-loader)
  */
 
-let stylesInDom = {}
-const memoize = function(fn) {
-  var memo
-  return function () {
-    if (typeof memo === 'undefined')
-      memo = fn.apply(this, arguments)
-    return memo
-  }
-}
-const isOldIE = memoize(function() {
-  return /msie [6-9]\b/.test(window.navigator.userAgent.toLowerCase())
-})
-const getHeadElement = memoize(function () {
-  return document.head || document.getElementsByTagName('head')[0]
-})
+ import memoize from '../utils/memoize'
+ import universal from './universal'
+
+const isOldIE = memoize(() => /msie [6-9]\b/.test(window.navigator.userAgent.toLowerCase()))
+const getHeadElement = memoize(() => document.head || document.getElementsByTagName('head')[0])
+let stylesInDOM = {}
 let singletonElement = null
 let singletonCounter = 0
 let styleElementsInsertedAtTop = []
 
-module.exports = function addStyles(list, options) {
+export default function addStyles (list, options) {
   if(typeof window === 'object') {
-    if(typeof DEBUG !== 'undefined' && DEBUG) {
-      if(typeof document !== 'object') throw new Error('The style-loader cannot be used in a non-browser environment')
-    }
-
     options = options || {}
     // Force single-tag solution on IE6-9, which has a hard limit on the # of <style>
     // tags it will allow on a page
@@ -38,39 +25,39 @@ module.exports = function addStyles(list, options) {
     if (typeof options.insertAt === 'undefined') options.insertAt = 'bottom'
 
     var styles = listToStyles(list)
-    addStylesToDom(styles, options)
+    addStylesToDOM(styles, options)
 
     return function update(newList) {
       var mayRemove = []
       for(var i = 0; i < styles.length; i++) {
         var item = styles[i]
-        var domStyle = stylesInDom[item.id]
+        var domStyle = stylesInDOM[item.id]
         domStyle.refs--
         mayRemove.push(domStyle)
       }
       if(newList) {
         var newStyles = listToStyles(newList)
-        addStylesToDom(newStyles, options)
+        addStylesToDOM(newStyles, options)
       }
       for(var i = 0; i < mayRemove.length; i++) {
         var domStyle = mayRemove[i]
         if(domStyle.refs === 0) {
           for(var j = 0; j < domStyle.parts.length; j++)
             domStyle.parts[j]()
-          delete stylesInDom[domStyle.id]
+          delete stylesInDOM[domStyle.id]
         }
       }
     }
   } else {
-    global.__universal = global.__universal || require('./universal')
-    global.__universal.styles.push([ list, options ])
+    const enqueue = universal(addStyles)
+    enqueue(list, options)
   }
 }
 
-function addStylesToDom(styles, options) {
+function addStylesToDOM(styles, options) {
   for(var i = 0; i < styles.length; i++) {
     var item = styles[i]
-    var domStyle = stylesInDom[item.id]
+    var domStyle = stylesInDOM[item.id]
     if(domStyle) {
       domStyle.refs++
       for(var j = 0; j < domStyle.parts.length; j++) {
@@ -84,7 +71,7 @@ function addStylesToDom(styles, options) {
       for(var j = 0; j < item.parts.length; j++) {
         parts.push(addStyle(item.parts[j], options))
       }
-      stylesInDom[item.id] = { id: item.id, refs: 1, parts: parts }
+      stylesInDOM[item.id] = { id: item.id, refs: 1, parts: parts }
     }
   }
 }

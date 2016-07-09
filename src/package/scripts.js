@@ -14,6 +14,10 @@ export default ({}) => ({ 'start': 'run-p build-watch'
                         , 'clean-lib': 'rimraf lib'
                         , 'clean-doc': 'rimraf doc'
 
+                          /** ESLINT */
+                        , 'lint': 'eslint src'
+                        , 'fix': 'eslint --fix src'
+
                           /** COMPILE */
                         , 'prebuild': 'npm run clean'
                         , 'build': 'babel src/lib -d lib'

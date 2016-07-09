@@ -11,6 +11,8 @@
     "clean": "run-p clean-lib clean-doc",
     "clean-lib": "rimraf lib",
     "clean-doc": "rimraf doc",
+    "lint": "eslint src",
+    "fix": "eslint --fix src",
     "prebuild": "npm run clean",
     "build": "babel src/lib -d lib",
     "build-watch": "npm run build -- --watch",
@@ -35,7 +37,7 @@
   "devDependencies": {
     "babel-cli": "latest",
     "babel-core": "latest",
-    "babel-eslint": "latest",
+    "babel-eslint": "next",
     "babel-loader": "latest",
     "babel-plugin-react-transform": "latest",
     "babel-plugin-transform-runtime": "latest",
@@ -48,6 +50,8 @@
     "eslint": "latest",
     "eslint-plugin-babel": "latest",
     "eslint-plugin-react": "latest",
+    "ncp": "latest",
+    "npm-run-all": "latest",
     "rimraf": "latest"
   },
   "author": "Cole Chamberlain <cole.chamberlain@gmail.com>",

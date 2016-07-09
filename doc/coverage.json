@@ -1,0 +1,19 @@
+{
+  "coverage": "50%",
+  "expectCount": 2,
+  "actualCount": 1,
+  "files": {
+    "lib/addStyleUrls.js": {
+      "expectCount": 1,
+      "actualCount": 1,
+      "undocumentLines": []
+    },
+    "lib/universal.js": {
+      "expectCount": 1,
+      "actualCount": 0,
+      "undocumentLines": [
+        9
+      ]
+    }
+  }
+}

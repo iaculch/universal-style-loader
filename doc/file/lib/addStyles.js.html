@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <base data-ice="baseUrl" href="../../">
+  <title data-ice="title">lib/addStyles.js | API Document</title>
+  <link type="text/css" rel="stylesheet" href="css/style.css">
+  <link type="text/css" rel="stylesheet" href="css/prettify-tomorrow.css">
+  <script src="script/prettify/prettify.js"></script>
+  
+  
+  <script src="script/manual.js"></script>
+</head>
+<body class="layout-container" data-ice="rootContainer">
+
+<header>
+  <a href="./">Home</a>
+  
+  <a href="identifiers.html">Reference</a>
+  <a href="source.html">Source</a>
+  
+  <a data-ice="repoURL" href="https://github.com/noderaider/universal-style-loader" class="repo-url-github">Repository</a>
+  <div class="search-box">
+  <span>
+    <img src="./image/search.png">
+    <span class="search-input-edge"></span><input class="search-input"><span class="search-input-edge"></span>
+  </span>
+    <ul class="search-result"></ul>
+  </div>
+</header>
+
+<nav class="navigation" data-ice="nav"><div>
+  <ul>
+    
+  <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-addStyleUrls">addStyleUrls</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-universal">universal</a></span></span></li>
+</ul>
+</div>
+</nav>
+
+<div class="content" data-ice="content"><h1 data-ice="title">lib/addStyles.js</h1>
+<pre class="source-code line-number raw-source-code"><code class="prettyprint linenums" data-ice="content">/**
+ * MIT License http://www.opensource.org/licenses/mit-license.php
+ * Author Tobias Koppers @sokra (style-loader)
+ * Refactored by Cole Chamberlain &lt;cole.chamberlain@gmail.com&gt; @noderaider (ES2016 / universal-style-loader)
+ */
+
+let stylesInDom = {}
+const memoize = function(fn) {
+  var memo
+  return function () {
+    if (typeof memo === &apos;undefined&apos;)
+      memo = fn.apply(this, arguments)
+    return memo
+  }
+}
+const isOldIE = memoize(function() {
+  return /msie [6-9]\b/.test(window.navigator.userAgent.toLowerCase())
+})
+const getHeadElement = memoize(function () {
+  return document.head || document.getElementsByTagName(&apos;head&apos;)[0]
+})
+let singletonElement = null
+let singletonCounter = 0
+let styleElementsInsertedAtTop = []
+
+module.exports = function addStyles(list, options) {
+  if(typeof window === &apos;object&apos;) {
+    if(typeof DEBUG !== &apos;undefined&apos; &amp;&amp; DEBUG) {
+      if(typeof document !== &apos;object&apos;) throw new Error(&apos;The style-loader cannot be used in a non-browser environment&apos;)
+    }
+
+    options = options || {}
+    // Force single-tag solution on IE6-9, which has a hard limit on the # of &lt;style&gt;
+    // tags it will allow on a page
+    if (typeof options.singleton === &apos;undefined&apos;) options.singleton = isOldIE()
+
+    // By default, add &lt;style&gt; tags to the bottom of &lt;head&gt;.
+    if (typeof options.insertAt === &apos;undefined&apos;) options.insertAt = &apos;bottom&apos;
+
+    var styles = listToStyles(list)
+    addStylesToDom(styles, options)
+
+    return function update(newList) {
+      var mayRemove = []
+      for(var i = 0; i &lt; styles.length; i++) {
+        var item = styles[i]
+        var domStyle = stylesInDom[item.id]
+        domStyle.refs--
+        mayRemove.push(domStyle)
+      }
+      if(newList) {
+        var newStyles = listToStyles(newList)
+        addStylesToDom(newStyles, options)
+      }
+      for(var i = 0; i &lt; mayRemove.length; i++) {
+        var domStyle = mayRemove[i]
+        if(domStyle.refs === 0) {
+          for(var j = 0; j &lt; domStyle.parts.length; j++)
+            domStyle.parts[j]()
+          delete stylesInDom[domStyle.id]
+        }
+      }
+    }
+  } else {
+    global.__universal = global.__universal || require(&apos;./universal&apos;)
+    global.__universal.styles.push([ list, options ])
+  }
+}
+
+function addStylesToDom(styles, options) {
+  for(var i = 0; i &lt; styles.length; i++) {
+    var item = styles[i]
+    var domStyle = stylesInDom[item.id]
+    if(domStyle) {
+      domStyle.refs++
+      for(var j = 0; j &lt; domStyle.parts.length; j++) {
+        domStyle.parts[j](item.parts[j])
+      }
+      for(; j &lt; item.parts.length; j++) {
+        domStyle.parts.push(addStyle(item.parts[j], options))
+      }
+    } else {
+      var parts = []
+      for(var j = 0; j &lt; item.parts.length; j++) {
+        parts.push(addStyle(item.parts[j], options))
+      }
+      stylesInDom[item.id] = { id: item.id, refs: 1, parts: parts }
+    }
+  }
+}
+
+function listToStyles(list) {
+  var styles = []
+  var newStyles = {}
+  for(var i = 0; i &lt; list.length; i++) {
+    var item = list[i]
+    var id = item[0]
+    var css = item[1]
+    var media = item[2]
+    var sourceMap = item[3]
+    var part = { css: css, media: media, sourceMap: sourceMap }
+    if(!newStyles[id])
+      styles.push(newStyles[id] = { id: id, parts: [ part ] })
+    else
+      newStyles[id].parts.push(part)
+  }
+  return styles
+}
+
+function insertStyleElement(options, styleElement) {
+  var head = getHeadElement()
+  var lastStyleElementInsertedAtTop = styleElementsInsertedAtTop[styleElementsInsertedAtTop.length - 1]
+  if (options.insertAt === &apos;top&apos;) {
+    if(!lastStyleElementInsertedAtTop) {
+      head.insertBefore(styleElement, head.firstChild)
+    } else if(lastStyleElementInsertedAtTop.nextSibling) {
+      head.insertBefore(styleElement, lastStyleElementInsertedAtTop.nextSibling)
+    } else {
+      head.appendChild(styleElement)
+    }
+    styleElementsInsertedAtTop.push(styleElement)
+  } else if (options.insertAt === &apos;bottom&apos;) {
+    head.appendChild(styleElement)
+  } else {
+    throw new Error(&apos;Invalid value for parameter \&apos;insertAt\&apos;. Must be \&apos;top\&apos; or \&apos;bottom\&apos;.&apos;)
+  }
+}
+
+function removeStyleElement(styleElement) {
+  styleElement.parentNode.removeChild(styleElement)
+  var idx = styleElementsInsertedAtTop.indexOf(styleElement)
+  if(idx &gt;= 0) {
+    styleElementsInsertedAtTop.splice(idx, 1)
+  }
+}
+
+function createStyleElement(options) {
+  var styleElement = document.createElement(&apos;style&apos;)
+  styleElement.type = &apos;text/css&apos;
+  insertStyleElement(options, styleElement)
+  return styleElement
+}
+
+function createLinkElement(options) {
+  var linkElement = document.createElement(&apos;link&apos;)
+  linkElement.rel = &apos;stylesheet&apos;
+  insertStyleElement(options, linkElement)
+  return linkElement
+}
+
+function addStyle(obj, options) {
+  var styleElement, update, remove
+
+  if (options.singleton) {
+    var styleIndex = singletonCounter++
+    styleElement = singletonElement || (singletonElement = createStyleElement(options))
+    update = applyToSingletonTag.bind(null, styleElement, styleIndex, false)
+    remove = applyToSingletonTag.bind(null, styleElement, styleIndex, true)
+  } else if(obj.sourceMap &amp;&amp;
+    typeof URL === &apos;function&apos; &amp;&amp;
+    typeof URL.createObjectURL === &apos;function&apos; &amp;&amp;
+    typeof URL.revokeObjectURL === &apos;function&apos; &amp;&amp;
+    typeof Blob === &apos;function&apos; &amp;&amp;
+    typeof btoa === &apos;function&apos;) {
+    styleElement = createLinkElement(options)
+    update = updateLink.bind(null, styleElement)
+    remove = function() {
+      removeStyleElement(styleElement)
+      if(styleElement.href)
+        URL.revokeObjectURL(styleElement.href)
+    }
+  } else {
+    styleElement = createStyleElement(options)
+    update = applyToTag.bind(null, styleElement)
+    remove = function() {
+      removeStyleElement(styleElement)
+    }
+  }
+
+  update(obj)
+
+  return function updateStyle(newObj) {
+    if(newObj) {
+      if(newObj.css === obj.css &amp;&amp; newObj.media === obj.media &amp;&amp; newObj.sourceMap === obj.sourceMap)
+        return
+      update(obj = newObj)
+    } else {
+      remove()
+    }
+  }
+}
+
+var replaceText = (function () {
+  var textStore = []
+
+  return function (index, replacement) {
+    textStore[index] = replacement
+    return textStore.filter(Boolean).join(&apos;\n&apos;)
+  }
+})()
+
+function applyToSingletonTag(styleElement, index, remove, obj) {
+  var css = remove ? &apos;&apos; : obj.css
+
+  if (styleElement.styleSheet) {
+    styleElement.styleSheet.cssText = replaceText(index, css)
+  } else {
+    var cssNode = document.createTextNode(css)
+    var childNodes = styleElement.childNodes
+    if (childNodes[index]) styleElement.removeChild(childNodes[index])
+    if (childNodes.length) {
+      styleElement.insertBefore(cssNode, childNodes[index])
+    } else {
+      styleElement.appendChild(cssNode)
+    }
+  }
+}
+
+function applyToTag(styleElement, obj) {
+  var css = obj.css
+  var media = obj.media
+
+  if(media) {
+    styleElement.setAttribute(&apos;media&apos;, media)
+  }
+
+  if(styleElement.styleSheet) {
+    styleElement.styleSheet.cssText = css
+  } else {
+    while(styleElement.firstChild) {
+      styleElement.removeChild(styleElement.firstChild)
+    }
+    styleElement.appendChild(document.createTextNode(css))
+  }
+}
+
+function updateLink(linkElement, obj) {
+  var css = obj.css
+  var sourceMap = obj.sourceMap
+
+  if(sourceMap) {
+    // http://stackoverflow.com/a/26603875
+    css += &apos;\n/*# sourceMappingURL=data:application/json;base64,&apos; + btoa(unescape(encodeURIComponent(JSON.stringify(sourceMap)))) + &apos; */&apos;
+  }
+
+  var blob = new Blob([ css ], { type: &apos;text/css&apos; })
+
+  var oldSrc = linkElement.href
+
+  linkElement.href = URL.createObjectURL(blob)
+
+  if(oldSrc)
+    URL.revokeObjectURL(oldSrc)
+}
+</code></pre>
+
+</div>
+
+<footer class="footer">
+  Generated by <a href="https://esdoc.org">ESDoc<span data-ice="esdocVersion">(0.4.7)</span></a>
+</footer>
+
+<script src="script/search_index.js"></script>
+<script src="script/search.js"></script>
+<script src="script/pretty-print.js"></script>
+<script src="script/inherited-summary.js"></script>
+<script src="script/test-summary.js"></script>
+<script src="script/inner-link.js"></script>
+<script src="script/patch-for-local.js"></script>
+</body>
+</html>

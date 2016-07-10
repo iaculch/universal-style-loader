@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <base data-ice="baseUrl">
+  <title data-ice="title">API Document</title>
+  <link type="text/css" rel="stylesheet" href="css/style.css">
+  <link type="text/css" rel="stylesheet" href="css/prettify-tomorrow.css">
+  <script src="script/prettify/prettify.js"></script>
+  
+  
+  <script src="script/manual.js"></script>
+</head>
+<body class="layout-container" data-ice="rootContainer">
+
+<header>
+  <a href="./">Home</a>
+  
+  <a href="identifiers.html">Reference</a>
+  <a href="source.html">Source</a>
+  
+  <a data-ice="repoURL" href="https://github.com/noderaider/universal-style-loader" class="repo-url-github">Repository</a>
+  <div class="search-box">
+  <span>
+    <img src="./image/search.png">
+    <span class="search-input-edge"></span><input class="search-input"><span class="search-input-edge"></span>
+  </span>
+    <ul class="search-result"></ul>
+  </div>
+</header>
+
+<nav class="navigation" data-ice="nav"><div>
+  <ul>
+    
+  <li data-ice="doc"><div data-ice="dirPath" class="nav-dir-path">compile</div><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-addStyleUrls">addStyleUrls</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-addStyles">addStyles</a></span></span></li>
+<li data-ice="doc"><div data-ice="dirPath" class="nav-dir-path">utils</div><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-memoize">memoize</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-wrapper">wrapper</a></span></span></li>
+</ul>
+</div>
+</nav>
+
+<div class="content" data-ice="content"><div data-ice="index" class="github-markdown"><h1 id="-universal-style-loader-https-npmjs-com-package-universal-style-loader-for-webpack"><a href="https://npmjs.com/package/universal-style-loader">universal-style-loader</a> for webpack</h1>
+<p><strong>A drop-in replacement for webpack&apos;s <a href="https://npmjs.com/package/style-loader">style-loader</a> that won&apos;t bomb. Client rendering works exactly the same as style-loader. Server rendering defers style application to a future point (typically when serving the response). No dependencies on other isomorphic webpack loaders / plugins.</strong></p>
+<p><a href="https://nodei.co/npm/universal-style-loader/"><img src="https://nodei.co/npm/universal-style-loader.png?stars=true&amp;downloads=true" alt="NPM"></a></p>
+<p><code>npm i -S universal-style-loader</code></p>
+<p>By default, this module will accrue styles and link css urls when server rendering into a global.<strong>universal</strong> object. If you do nothing, the universal-style-loader should never throw, but the styles will not be applied to anything (from the server render). There are a few options depending on your needs to get the styles on the page, server-side.</p>
+<h4 id="1-replay-function">1. replay function</h4>
+<ul>
+<li>Executes the same script that would have been run by the style-loader, at a deferred point in time (hopefully, in a browser context).</li>
+<li>Will try and access window and other DOM globals. If they do not exist, it will repeat the same server fallback over again.</li>
+</ul>
+<pre><code class="lang-js"><code class="source-code prettyprint">global.__universal__.replay()</code>
+</code></pre>
+<h4 id="2-serialize-function">2. serialize function</h4>
+<ul>
+<li>Prints out a raw string that can be embedded in a web page head template (if you are not server rendering with React).</li>
+<li>Will embed all the style loading code with the styles and will run as soon as it is hit in the web page load.</li>
+<li>Does not interact with window, document or other DOM globals. (EVENTUALLY)</li>
+</ul>
+<pre><code><code class="source-code prettyprint">/** RENDER SOME STUFF THAT WOULD NORMALLY THROW WITH style-loader */
+/** ... */
+
+/** Prints out raw string styles to template into head and clears the buffer out for the next server render */
+const styles = global.__universal__.serialize()
+
+const html = `&lt;!doctype html&gt;
+&lt;html&gt;
+  &lt;head&gt;
+    ${styles}
+  &lt;/head&gt;
+  &lt;body&gt;
+    ${content}
+  &lt;/body&gt;
+&lt;/html&gt;</code>
+</code></pre><h4 id="3-reactstyles-function-recommended-for-react-apps-">3. reactStyles function (recommended for react apps)</h4>
+<ul>
+<li>Recommended for server-side rendering in React applications.</li>
+<li>Prints out a &lt;Styles /&gt; React component that can be rendered into the head tag (full react-router example below).</li>
+<li>Does not interact with window, document or other DOM globals. (EVENTUALLY)</li>
+<li>By using a factory, this library needs no npm React dependency.</li>
+</ul>
+<pre><code class="lang-jsx"><code class="source-code prettyprint">import React from &apos;react&apos;
+import { renderToString } from &apos;react-dom/server&apos;
+import { createMemoryHistory, match, RouterContext } from &apos;react-router&apos;
+import { Provider } from &apos;react-redux&apos;
+import { syncHistoryWithStore } from &apos;react-router-redux&apos;
+
+//....
+
+router.use((req, res, next) =&gt; {
+  let memoryHistory = createMemoryHistory(req.path)
+  let store = configureStore(memoryHistory)
+  let history = syncHistoryWithStore(memoryHistory, store)
+
+  /* react router match history */
+  match({ history, routes, location: req.url }, (error, redirectLocation, renderProps) =&gt; {
+    const content = renderToString(&lt;Provider store={store}&gt;&lt;RouterContext {...renderProps} /&gt;&lt;/Provider&gt;)
+
+    /** Returns a component that applies styles and clears the buffer for the next server render */
+    const Styles = global.__universal__.reactStyles(React)
+
+    const html = `&lt;!doctype html&gt;
+    ${renderToString((
+      &lt;html&gt;
+        &lt;head&gt;
+          &lt;Styles /&gt;
+        &lt;/head&gt;
+        &lt;body&gt;
+          {content}
+        &lt;/body&gt;
+      &lt;/html&gt;
+    )}`
+
+    res.send(html)
+  })
+
+})</code>
+</code></pre>
+<h1 id="documentation-from-style-loader-https-npmjs-com-package-style-loader-client-side-">Documentation from <a href="https://npmjs.com/package/style-loader">style-loader</a> (Client-side)</h1>
+<p>Adds CSS to the DOM by injecting a <code>&lt;style&gt;</code> tag</p>
+<h2 id="usage">Usage</h2>
+<p><a href="http://webpack.github.io/docs/using-loaders.html">Documentation: Using loaders</a></p>
+<h3 id="simple-api">Simple API</h3>
+<pre><code class="lang-javascript"><code class="source-code prettyprint">require(&quot;style!raw!./file.css&quot;);
+// =&gt; add rules in file.css to document</code>
+</code></pre>
+<p>It&apos;s recommended to combine it with the <a href="https://github.com/webpack/css-loader"><code>css-loader</code></a>: <code>require(&quot;style!css!./file.css&quot;)</code>.</p>
+<p>It&apos;s also possible to add a URL instead of a CSS string:</p>
+<pre><code class="lang-javascript"><code class="source-code prettyprint">require(&quot;style/url!file!./file.css&quot;);
+// =&gt; add a &lt;link rel=&quot;stylesheet&quot;&gt; to file.css to document</code>
+</code></pre>
+<h3 id="local-scope-css">Local scope CSS</h3>
+<p>(experimental)</p>
+<p>When using <a href="https://github.com/webpack/css-loader#local-scope">local scope CSS</a> the module exports the generated identifiers:</p>
+<pre><code class="lang-javascript"><code class="source-code prettyprint">var style = require(&quot;style!css!./file.css&quot;);
+style.placeholder1 === &quot;z849f98ca812bc0d099a43e0f90184&quot;</code>
+</code></pre>
+<h3 id="reference-counted-api">Reference-counted API</h3>
+<pre><code class="lang-javascript"><code class="source-code prettyprint">var style = require(&quot;style/useable!css!./file.css&quot;);
+style.use(); // = style.ref();
+style.unuse(); // = style.unref();</code>
+</code></pre>
+<p>Styles are not added on <code>require</code>, but instead on call to <code>use</code>/<code>ref</code>. Styles are removed from page if <code>unuse</code>/<code>unref</code> is called exactly as often as <code>use</code>/<code>ref</code>.</p>
+<p>Note: Behavior is undefined when <code>unuse</code>/<code>unref</code> is called more often than <code>use</code>/<code>ref</code>. Don&apos;t do that.</p>
+<h3 id="options">Options</h3>
+<h4 id="-insertat-"><code>insertAt</code></h4>
+<p>By default, the style-loader appends <code>&lt;style&gt;</code> elements to the end of the <code>&lt;head&gt;</code> tag of the page. This will cause CSS created by the loader to take priority over CSS already present in the document head. To insert style elements at the beginning of the head, set this query parameter to &apos;top&apos;, e.g. <code>require(&apos;../style.css?insertAt=top&apos;)</code>.</p>
+<h4 id="-singleton-"><code>singleton</code></h4>
+<p>If defined, the style-loader will re-use a single <code>&lt;style&gt;</code> element, instead of adding/removing individual elements for each required module. <strong>Note:</strong> this option is on by default in IE9, which has strict limitations on the number of style tags allowed on a page. You can enable or disable it with the singleton query parameter (<code>?singleton</code> or <code>?-singleton</code>).</p>
+<h2 id="recommended-configuration">Recommended configuration</h2>
+<p>By convention the reference-counted API should be bound to <code>.useable.css</code> and the simple API to <code>.css</code> (similar to other file types, i.e. <code>.useable.less</code> and <code>.less</code>).</p>
+<p>So the recommended configuration for webpack is:</p>
+<pre><code class="lang-javascript"><code class="source-code prettyprint">{
+  module: {
+    loaders: [
+      { test: /\.css$/, exclude: /\.useable\.css$/, loader: &quot;style!css&quot; },
+      { test: /\.useable\.css$/, loader: &quot;style/useable!css&quot; }
+    ]
+  }
+}</code>
+</code></pre>
+<p><strong>Note</strong> about source maps support and assets referenced with <code>url</code>: when style loader is used with ?sourceMap option, the CSS modules will be generated as <code>Blob</code>s, so relative paths don&apos;t work (they would be relative to <code>chrome:blob</code> or <code>chrome:devtools</code>). In order for assets to maintain correct paths setting <code>output.publicPath</code> property of webpack configuration must be set, so that absolute paths are generated.</p>
+<h2 id="install">Install</h2>
+<pre><code><code class="source-code prettyprint">npm install style-loader</code>
+</code></pre><h2 id="license">License</h2>
+<p>MIT (<a href="http://www.opensource.org/licenses/mit-license.php">http://www.opensource.org/licenses/mit-license.php</a>)</p>
+</div>
+</div>
+
+<footer class="footer">
+  Generated by <a href="https://esdoc.org">ESDoc<span data-ice="esdocVersion">(0.4.7)</span></a>
+</footer>
+
+<script src="script/search_index.js"></script>
+<script src="script/search.js"></script>
+<script src="script/pretty-print.js"></script>
+<script src="script/inherited-summary.js"></script>
+<script src="script/test-summary.js"></script>
+<script src="script/inner-link.js"></script>
+<script src="script/patch-for-local.js"></script>
+</body>
+</html>
